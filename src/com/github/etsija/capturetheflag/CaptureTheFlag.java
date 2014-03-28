@@ -11,19 +11,22 @@ import java.util.Timer;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class CaptureTheFlag extends JavaPlugin {
 
 	private Logger _log = Logger.getLogger("Minecraft"); // Write debug info to console
-	File configFile;					// config.yml
-	FileConfiguration config;			// configuration object for config.yml
-	private String world;				// 
-	private Integer checkInterval;		// plugin config parameters
-	private Integer materialId;			//
-	private Timer timer = new Timer();	// Timer task
+	File configFile;						// config.yml
+	FileConfiguration config;				// configuration object for config.yml
+	private String world;					// 
+	private Integer checkInterval = 3;		// plugin config parameters
+	private Integer materialId;				//
+	private Timer timer = new Timer();		// Timer task
 	
 	public void onEnable() {
 		
@@ -45,7 +48,6 @@ public class CaptureTheFlag extends JavaPlugin {
 		// Set the default parameter values
 		final Map<String, Object> configParams = new HashMap<String, Object>();
 		configParams.put("world", "Seikkailumaa");
-		configParams.put("checkInterval", "3");
 		configParams.put("materialId", "399");
 		setDefaultValues(config, configParams);
 				
@@ -55,16 +57,8 @@ public class CaptureTheFlag extends JavaPlugin {
 				
 		// Finally, import all needed config params from the corresponding config files
 		world = config.getString("world");
-		checkInterval = config.getInt("checkInterval");
 		materialId = config.getInt("materialId");
-		
-		// Initialize the check loop (timer task)
-        // Multiply by 1000 because Timer accepts its arguments in milliseconds...
-		_log.info("[CaptureTheFlag] Initializing timer loop...");
-        this.timer.scheduleAtFixedRate(new CaptureTheFlagTimer(this,_log, world, materialId),
-                                        checkInterval*1000,
-                                        checkInterval*1000);
-		
+				
 		_log.info("[CaptureTheFlag] enabled!");
 	}
 	
@@ -76,6 +70,42 @@ public class CaptureTheFlag extends JavaPlugin {
 		this.timer.cancel();
 		
 		_log.info("[CaptureTheFlag] disabled!");
+	}
+	
+	@Override
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		
+		Player player = null;
+		
+		if (sender instanceof Player)
+			player = (Player) sender;
+		
+		if (cmd.getName().equalsIgnoreCase("flag")) {
+			if (player.hasPermission("capturetheflag.flag")) {
+				if (args.length == 2) {
+					if (args[0].equalsIgnoreCase("on")) {
+						// Initialize the check loop (timer task)
+				        // Multiply by 1000 because Timer accepts its arguments in milliseconds...
+						checkInterval = Integer.getInteger(args[1]);
+						if (checkInterval < 1)
+							checkInterval = 1;
+						_log.info("checkInterval = " + checkInterval);
+				        this.timer.scheduleAtFixedRate(new CaptureTheFlagTimer(this,_log, world, materialId),
+                                checkInterval*1000,
+                                checkInterval*1000);
+				        player.sendMessage("CaptureTheFlag: flag following started.");
+				        return true;
+					}
+				} else if (args.length == 1) {
+					if (args[0].equalsIgnoreCase("off")) {
+						this.timer.cancel();
+						player.sendMessage("CaptureTheFlag: flag following stopped.");
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 	
 	//////////////////////////////////////

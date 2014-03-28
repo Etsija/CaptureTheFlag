@@ -13,6 +13,7 @@ public class CaptureTheFlagTimer extends TimerTask {
 	private CaptureTheFlag _plugin;
 	private String _world;
 	private Integer _materialId;
+	private String _whoHasFlag="";
 	
 	// Constructor
 	public CaptureTheFlagTimer(CaptureTheFlag plugin,
@@ -46,11 +47,26 @@ public class CaptureTheFlagTimer extends TimerTask {
         		return;
         	}
         	
+        	String playerName = player.getDisplayName();
+        	
         	// Check if this player has the flag
         	if (player.getInventory().contains(_materialId)) {
-        		Bukkit.broadcastMessage("Player " + player.getDisplayName() + " has the flag!");
+        		
+        		// If the player just took the flag...
+        		if (!playerName.equals(_whoHasFlag)) {
+        			Bukkit.broadcastMessage("Player " + playerName + " took the flag!");
+        			_whoHasFlag = playerName;
+        		}
         		//player.getWorld().strikeLightningEffect(player.getLocation());
         		player.getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 1);
+
+        	} else {
+        		
+        		// If the player dropped the flag
+        		if (playerName.equals(_whoHasFlag)) {
+        			Bukkit.broadcastMessage("Player " + playerName + " dropped the flag!");
+        			_whoHasFlag = "";
+        		}
         	}
         	
         }

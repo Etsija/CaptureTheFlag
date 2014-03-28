@@ -1,3 +1,9 @@
 name: CaptureTheFlag
 main: com.github.etsija.capturetheflag.CaptureTheFlag
 version: 0.1
+commands:
+   flag:
+      description: This command turns flag following on/off
+      usage: /<command> [on/off]
+      permission: <plugin name>.flag
+      permission-message: You don't have <permission>
