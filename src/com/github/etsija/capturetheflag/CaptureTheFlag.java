@@ -69,11 +69,14 @@ public class CaptureTheFlag extends JavaPlugin {
 	}
 	
 	public void onDisable() {
+	
 		saveYaml(configFile, config);
+		
+		// Cancel all CaptureTheFlagTimer tasks
+		this.timer.cancel();
+		
 		_log.info("[CaptureTheFlag] disabled!");
 	}
-	
-	
 	
 	//////////////////////////////////////
 	// Plugin's file configuration methods

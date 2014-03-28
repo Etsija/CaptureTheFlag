@@ -4,6 +4,7 @@ import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Effect;
 import org.bukkit.entity.Player;
 
 public class CaptureTheFlagTimer extends TimerTask {
@@ -41,13 +42,15 @@ public class CaptureTheFlagTimer extends TimerTask {
         	
         	// If this player is not in the world to be checked -> return immediately
         	String playerWorld = player.getWorld().getName();
-        	if (playerWorld != _world) {
+        	if (!playerWorld.equals(_world)) {
         		return;
         	}
         	
         	// Check if this player has the flag
         	if (player.getInventory().contains(_materialId)) {
         		Bukkit.broadcastMessage("Player " + player.getDisplayName() + " has the flag!");
+        		//player.getWorld().strikeLightningEffect(player.getLocation());
+        		player.getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 1);
         	}
         	
         }
