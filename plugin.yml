@@ -4,6 +4,6 @@ version: 0.1
 commands:
    flag:
       description: This command turns flag following on/off
-      usage: /<command> [on/off]
-      permission: <plugin name>.flag
-      permission-message: You don't have <permission>
+      usage: /<command> [on/off] {interval_in_s}
+      permission: capturetheflag.flag
+      permission-message: You don't have <permission> permission.

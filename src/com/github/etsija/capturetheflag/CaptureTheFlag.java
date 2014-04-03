@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.Map.Entry;
@@ -27,9 +29,13 @@ public class CaptureTheFlag extends JavaPlugin {
 	private Integer checkInterval = 3;		// plugin config parameters
 	private Integer materialId;				//
 	private Timer timer = new Timer();		// Timer task
+	private boolean tracking = false;
+	String strEffects[] = {"flames", "lightning", "fireworks", "endereye", "smoke"};
+	List<String> effects = Arrays.asList(strEffects);
+	String effectInUse = effects.get(0);
 	
 	public void onEnable() {
-		
+			
 		// Initialize the configuration files
 		// Note that so far, they're only virtual, not real files yet
 		configFile = new File(getDataFolder(), "config.yml");
@@ -80,29 +86,50 @@ public class CaptureTheFlag extends JavaPlugin {
 		if (sender instanceof Player)
 			player = (Player) sender;
 		
-		if (cmd.getName().equalsIgnoreCase("flag")) {
-			if (player.hasPermission("capturetheflag.flag")) {
-				if (args.length == 2) {
-					if (args[0].equalsIgnoreCase("on")) {
-						// Initialize the check loop (timer task)
-				        // Multiply by 1000 because Timer accepts its arguments in milliseconds...
-						checkInterval = Integer.getInteger(args[1]);
-						if (checkInterval < 1)
-							checkInterval = 1;
-						_log.info("checkInterval = " + checkInterval);
-				        this.timer.scheduleAtFixedRate(new CaptureTheFlagTimer(this,_log, world, materialId),
-                                checkInterval*1000,
-                                checkInterval*1000);
-				        player.sendMessage("CaptureTheFlag: flag following started.");
-				        return true;
-					}
-				} else if (args.length == 1) {
-					if (args[0].equalsIgnoreCase("off")) {
-						this.timer.cancel();
-						player.sendMessage("CaptureTheFlag: flag following stopped.");
-						return true;
-					}
+		if ((cmd.getName().equalsIgnoreCase("flag")) &&
+			(player.hasPermission("capturetheflag.flag")) &&
+			(args.length > 0)) {
+			if (args[0].equalsIgnoreCase("on")) {
+				// Initialize the check loop (timer task)
+			    // Multiply by 1000 because Timer accepts its arguments in milliseconds...
+				if (args.length > 1) {
+					checkInterval = Integer.valueOf(args[1]);
+					if (checkInterval < 1)
+						checkInterval = 1;
+				} else {
+					checkInterval = 3;
 				}
+				if (!tracking) {
+					this.timer = new Timer();
+					this.timer.scheduleAtFixedRate(new CaptureTheFlagTimer(this,_log, world, materialId),
+												   checkInterval*1000,
+                                                   checkInterval*1000);
+					player.sendMessage("[CaptureTheFlag] Flag following started.");
+					tracking = true;
+				} else {
+					player.sendMessage("[CaptureTheFlag] Already following the flag.");
+				}
+				return true;
+				
+			} else if (args[0].equalsIgnoreCase("off")) {
+				if (tracking) {
+					this.timer.cancel();
+					player.sendMessage("[CaptureTheFlag] Flag following stopped.");
+					tracking = false;
+				} else {
+					player.sendMessage("[CaptureTheFlag] Was not following the flag.");
+				}
+				return true;
+			
+			} else if (args[0].equalsIgnoreCase("effect")) {
+				if (args.length == 1) {
+					player.sendMessage("[CaptureTheFlag] Current effect in use: " + effectInUse);
+					player.sendMessage("[CaptureTheFlag] Possible effects: " + effects);
+				} else if (effects.contains(args[1])) {
+					effectInUse = args[1];
+					player.sendMessage("[CaptureTheFlag] You changed the effect to: " + effectInUse);
+				}
+				return true;
 			}
 		}
 		return false;
