@@ -22,7 +22,6 @@ public class CaptureTheFlagTimer extends TimerTask {
 	private CaptureTheFlag _plugin;
 	private String _world;
 	private Integer _materialId;
-	private String _whoHasFlag="";
 	List<String> _whoHaveFlags = new ArrayList<String>();
 	
 	// Constructor
@@ -64,11 +63,29 @@ public class CaptureTheFlagTimer extends TimerTask {
         	{
         		
         		// If the player just took the flag...
-        		//if (!playerName.equals(_whoHasFlag)) {
         		if (!_whoHaveFlags.contains(playerName)) {
-        			Bukkit.broadcastMessage(ChatColor.BLUE + "[CaptureTheFlag] Player " + ChatColor.RED + playerName + ChatColor.BLUE + " now has the flag");
         			_whoHaveFlags.add(playerName);
-        			//_whoHasFlag = playerName;
+        			
+        			// Blue team got back its own plugin
+        			if (name.equals("blue") && _plugin.teamBlue.contains(playerName)) {
+        				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
+        						                + ChatColor.WHITE + " is now carrying the"
+        						                + ChatColor.BLUE  + " blue team's"
+        						                + ChatColor.WHITE + " own flag");
+        			} else if (name.equals("yellow") && _plugin.teamYellow.contains(playerName)) {
+        				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
+				                                + ChatColor.WHITE   + " is now carrying the"
+				                                + ChatColor.YELLOW  + " yellow team's"
+				                                + ChatColor.WHITE   + " own flag");
+        			} else if (name.equals("blue") && _plugin.teamYellow.contains(playerName)) {
+        				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
+                                                + ChatColor.WHITE + " has now captured"
+                                                + ChatColor.BLUE  + " blue team's flag!");
+        			} else if (name.equals("yellow") && _plugin.teamBlue.contains(playerName)) {
+        				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
+                                				+ ChatColor.WHITE  + " has now captured"
+                                				+ ChatColor.YELLOW + " yellow team's flag!");
+        			}
         		}
         		if (_plugin.effectInUse.equals("lightning")) {
         			player.getWorld().strikeLightningEffect(player.getLocation());
@@ -85,14 +102,12 @@ public class CaptureTheFlagTimer extends TimerTask {
         	} else {
         		
         		// If the player dropped the flag
-        		//if (playerName.equals(_whoHasFlag)) {
         		if (_whoHaveFlags.contains(playerName)) {
         			double X = player.getLocation().getX();
         			double Z = player.getLocation().getZ();
-        			Bukkit.broadcastMessage(ChatColor.BLUE + "[CaptureTheFlag] Player " + ChatColor.RED + playerName 
+        			Bukkit.broadcastMessage(ChatColor.BLUE + "[CTF] Player " + ChatColor.RED + playerName 
         								  + ChatColor.BLUE + " dropped the flag at ["
         								  + (int)X + "," + (int)Z + "]");
-        			//_whoHasFlag = "";
         			_whoHaveFlags.remove(playerName);
         		}
         	}

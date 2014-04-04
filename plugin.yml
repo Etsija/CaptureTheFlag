@@ -3,7 +3,12 @@ main: com.github.etsija.capturetheflag.CaptureTheFlag
 version: 0.1
 commands:
    flag:
-      description: This command turns flag following on/off
-      usage: /<command> [on/off] {interval_in_s}
+      description: This command turns flag following on/off & changes the effect
+      usage: /<command> [on/off/effect]
+      permission: capturetheflag.flag
+      permission-message: You don't have <permission> permission.
+   team:
+      description: This command handles the teams
+      usage: /<command> [add/remove/change/list]
       permission: capturetheflag.flag
       permission-message: You don't have <permission> permission.

@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,8 @@ import java.util.Timer;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -33,6 +36,8 @@ public class CaptureTheFlag extends JavaPlugin {
 	String strEffects[] = {"flames", "lightning", "fireworks", "endereye", "smoke"};
 	List<String> effects = Arrays.asList(strEffects);
 	String effectInUse = effects.get(0);
+	List<String> teamBlue = new ArrayList<String>();
+	List<String> teamYellow = new ArrayList<String>();
 	
 	public void onEnable() {
 			
@@ -83,51 +88,166 @@ public class CaptureTheFlag extends JavaPlugin {
 		
 		Player player = null;
 		
-		if (sender instanceof Player)
+		if (sender instanceof Player) {
 			player = (Player) sender;
+		} else {
+			sender.sendMessage("You must be a player to enter this command.");
+			return false;
+		}
 		
+		// Command /flag
 		if ((cmd.getName().equalsIgnoreCase("flag")) &&
 			(player.hasPermission("capturetheflag.flag")) &&
 			(args.length > 0)) {
+			
+			// /flag on || /flag on [interval]
 			if (args[0].equalsIgnoreCase("on")) {
 				// Initialize the check loop (timer task)
 			    // Multiply by 1000 because Timer accepts its arguments in milliseconds...
-				if (args.length > 1) {
+				if (args.length == 2) {
 					checkInterval = Integer.valueOf(args[1]);
 					if (checkInterval < 1)
 						checkInterval = 1;
 				} else {
 					checkInterval = 3;
+					player.sendMessage("[CTF] Flag polling interval now set to 3 seconds.");
+					player.sendMessage("[CTF] You can change it with /flag on [interval], minimum is 1s");
 				}
 				if (!tracking) {
 					this.timer = new Timer();
 					this.timer.scheduleAtFixedRate(new CaptureTheFlagTimer(this,_log, world, materialId),
 												   checkInterval*1000,
                                                    checkInterval*1000);
-					player.sendMessage("[CaptureTheFlag] Flag following started.");
+					player.sendMessage("[CTF] Flag following started.");
 					tracking = true;
 				} else {
-					player.sendMessage("[CaptureTheFlag] Already following the flag.");
-				}
-				return true;
-				
-			} else if (args[0].equalsIgnoreCase("off")) {
-				if (tracking) {
-					this.timer.cancel();
-					player.sendMessage("[CaptureTheFlag] Flag following stopped.");
-					tracking = false;
-				} else {
-					player.sendMessage("[CaptureTheFlag] Was not following the flag.");
+					player.sendMessage("[CTF] Already following the flag.");
 				}
 				return true;
 			
+			// /flag off
+			} else if (args[0].equalsIgnoreCase("off")) {
+				if (tracking) {
+					this.timer.cancel();
+					player.sendMessage("[CTF] Flag following stopped.");
+					tracking = false;
+				} else {
+					player.sendMessage("[CTF] Was not following the flag.");
+				}
+				return true;
+			
+			// /flag effect || /flag effect [new effect]
 			} else if (args[0].equalsIgnoreCase("effect")) {
 				if (args.length == 1) {
-					player.sendMessage("[CaptureTheFlag] Current effect in use: " + effectInUse);
-					player.sendMessage("[CaptureTheFlag] Possible effects: " + effects);
+					player.sendMessage("[CTF] Current effect in use: " + effectInUse);
+					player.sendMessage("[CTF] Possible effects: " + effects);
+					player.sendMessage("[CTF] You can change the effect with /team effect [new effect]");
 				} else if (effects.contains(args[1])) {
 					effectInUse = args[1];
-					player.sendMessage("[CaptureTheFlag] You changed the effect to: " + effectInUse);
+					player.sendMessage("[CTF] You changed the effect to: " + effectInUse);
+				}
+				return true;
+			}
+		
+		// Command /team
+		} else if ((cmd.getName().equalsIgnoreCase("team")) &&
+				(player.hasPermission("capturetheflag.team")) &&
+				(args.length > 0)) {
+			
+			// /team add || /team add [player] [team]
+			if (args[0].equalsIgnoreCase("add")) {
+				if (args.length < 3) {
+					player.sendMessage("[CTF] Usage: /team add [player] [blue/yellow]");
+				} else {
+					// Check that the target player is online
+					//Player target = (Bukkit.getServer().getPlayer(args[1]));
+			        //if (target == null) {
+			        //   player.sendMessage("[CTF] " + args[1] + " is not online!");
+			        //   return true;
+			        //}
+			        // Check that the team is either blue or yellow
+			        if (!(args[2].equalsIgnoreCase("blue") || args[2].equalsIgnoreCase("yellow"))) {
+			        	player.sendMessage("[CTF] Only blue and yellow teams allowed.");
+			        	return true;
+			        }
+			        // Check that the player is not already on this or another team
+			        if (teamBlue.contains(args[1]) || teamYellow.contains(args[1])) {
+			        	player.sendMessage("[CTF] " + ChatColor.RED + args[1] 
+			        					   + ChatColor.WHITE + " already in a team. Use /team remove/change.");
+			        	return true;
+			        }
+			        // All is well, so add the player to a team
+			        if (args[2].equalsIgnoreCase("blue")) {
+			        	teamBlue.add(args[1]);
+			        	Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1] 
+			        			                + ChatColor.WHITE + " added to the"
+			        			                + ChatColor.BLUE  + " blue team!");
+			        } else {
+			        	teamYellow.add(args[1]);
+			        	Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1] 
+			        			                + ChatColor.WHITE  + " added to the"
+			        			                + ChatColor.YELLOW + " yellow team!");
+			        }
+				}
+				return true;
+			
+			// /team remove || /team remove [player]
+			} else if (args[0].equalsIgnoreCase("remove")) {
+				if (args.length < 2) {
+					player.sendMessage("[CTF] Usage: /team remove [player]");
+				} else {
+					if (teamBlue.contains(args[1])) {
+						teamBlue.remove(args[1]);
+						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1] 
+								                + ChatColor.WHITE + " removed from the"
+								                + ChatColor.BLUE  + " blue team!");
+					} else if (teamYellow.contains(args[1])) {
+						teamYellow.remove(args[1]);
+						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1] 
+				                                + ChatColor.WHITE   + " removed from the"
+				                                + ChatColor.YELLOW  + " yellow team!");
+					} else {
+						player.sendMessage("[CTF] " + args[1] + " doesn't seem to belong to either team.");
+					}
+				}
+				return true;
+				
+			// /team change || /team change [player]
+			} else if (args[0].equalsIgnoreCase("change")) {
+				if (args.length < 2) {
+					player.sendMessage("[CTF] Usage: /team change [player]");
+				} else {
+					if (teamBlue.contains(args[1])) {
+						teamBlue.remove(args[1]);
+						teamYellow.add(args[1]);
+						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1]
+												+ ChatColor.WHITE  + " switched from the"
+												+ ChatColor.BLUE   + " blue team"
+												+ ChatColor.WHITE  + " to the"
+												+ ChatColor.YELLOW + " yellow team!");
+					} else if (teamYellow.contains(args[1])) {
+						teamYellow.remove(args[1]);
+						teamBlue.add(args[1]);
+						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1]
+												+ ChatColor.WHITE  + " switched from the"
+												+ ChatColor.YELLOW + " yellow team"
+												+ ChatColor.WHITE  + " to the"
+												+ ChatColor.BLUE   + " blue team!");
+					} else {
+						player.sendMessage("[CTF] " + args[1] + " doesn't seem to belong to either team.");
+					}
+				}
+				return true;
+				
+			// /team list || /team list [blue/yellow]
+			} else if (args[0].equalsIgnoreCase("list")) {
+				if (args.length < 2) {
+					player.sendMessage("[CTF] " + ChatColor.BLUE + "Blue team: " + teamBlue);
+					player.sendMessage("[CTF] " + ChatColor.YELLOW + "Yellow team: " + teamYellow);
+				} else if (args[1].equalsIgnoreCase("blue")) {
+					player.sendMessage("[CTF] " + ChatColor.BLUE + "Blue team: " + teamBlue);
+				} else if (args[1].equalsIgnoreCase("yellow")) {
+					player.sendMessage("[CTF] " + ChatColor.YELLOW + "Yellow team: " + teamYellow);
 				}
 				return true;
 			}
