@@ -166,25 +166,26 @@ public class CaptureTheFlag extends JavaPlugin {
 			        //   return true;
 			        //}
 			        // Check that the team is either blue or yellow
+					String playerName = args[1].toLowerCase();
 			        if (!(args[2].equalsIgnoreCase("blue") || args[2].equalsIgnoreCase("yellow"))) {
 			        	player.sendMessage("[CTF] Only blue and yellow teams allowed.");
 			        	return true;
 			        }
 			        // Check that the player is not already on this or another team
-			        if (teamBlue.contains(args[1]) || teamYellow.contains(args[1])) {
-			        	player.sendMessage("[CTF] " + ChatColor.RED + args[1] 
+			        if (teamBlue.contains(playerName) || teamYellow.contains(playerName)) {
+			        	player.sendMessage("[CTF] " + ChatColor.RED + playerName
 			        					   + ChatColor.WHITE + " already in a team. Use /team remove/change.");
 			        	return true;
 			        }
 			        // All is well, so add the player to a team
 			        if (args[2].equalsIgnoreCase("blue")) {
-			        	teamBlue.add(args[1]);
-			        	Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1] 
+			        	teamBlue.add(playerName);
+			        	Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName 
 			        			                + ChatColor.WHITE + " added to the"
 			        			                + ChatColor.BLUE  + " blue team!");
 			        } else {
-			        	teamYellow.add(args[1]);
-			        	Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1] 
+			        	teamYellow.add(playerName);
+			        	Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName 
 			        			                + ChatColor.WHITE  + " added to the"
 			        			                + ChatColor.YELLOW + " yellow team!");
 			        }
@@ -196,18 +197,19 @@ public class CaptureTheFlag extends JavaPlugin {
 				if (args.length < 2) {
 					player.sendMessage("[CTF] Usage: /team remove [player]");
 				} else {
-					if (teamBlue.contains(args[1])) {
-						teamBlue.remove(args[1]);
-						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1] 
+					String playerName = args[1].toLowerCase();
+					if (teamBlue.contains(playerName)) {
+						teamBlue.remove(playerName);
+						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName 
 								                + ChatColor.WHITE + " removed from the"
 								                + ChatColor.BLUE  + " blue team!");
-					} else if (teamYellow.contains(args[1])) {
-						teamYellow.remove(args[1]);
-						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1] 
+					} else if (teamYellow.contains(playerName)) {
+						teamYellow.remove(playerName);
+						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName 
 				                                + ChatColor.WHITE   + " removed from the"
 				                                + ChatColor.YELLOW  + " yellow team!");
 					} else {
-						player.sendMessage("[CTF] " + args[1] + " doesn't seem to belong to either team.");
+						player.sendMessage("[CTF] " + playerName + " doesn't seem to belong to either team.");
 					}
 				}
 				return true;
@@ -217,24 +219,25 @@ public class CaptureTheFlag extends JavaPlugin {
 				if (args.length < 2) {
 					player.sendMessage("[CTF] Usage: /team change [player]");
 				} else {
-					if (teamBlue.contains(args[1])) {
-						teamBlue.remove(args[1]);
-						teamYellow.add(args[1]);
-						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1]
+					String playerName = args[1].toLowerCase();
+					if (teamBlue.contains(playerName)) {
+						teamBlue.remove(playerName);
+						teamYellow.add(playerName);
+						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
 												+ ChatColor.WHITE  + " switched from the"
 												+ ChatColor.BLUE   + " blue team"
 												+ ChatColor.WHITE  + " to the"
 												+ ChatColor.YELLOW + " yellow team!");
-					} else if (teamYellow.contains(args[1])) {
-						teamYellow.remove(args[1]);
-						teamBlue.add(args[1]);
-						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + args[1]
+					} else if (teamYellow.contains(playerName)) {
+						teamYellow.remove(playerName);
+						teamBlue.add(playerName);
+						Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
 												+ ChatColor.WHITE  + " switched from the"
 												+ ChatColor.YELLOW + " yellow team"
 												+ ChatColor.WHITE  + " to the"
 												+ ChatColor.BLUE   + " blue team!");
 					} else {
-						player.sendMessage("[CTF] " + args[1] + " doesn't seem to belong to either team.");
+						player.sendMessage("[CTF] " + playerName + " doesn't seem to belong to either team.");
 					}
 				}
 				return true;

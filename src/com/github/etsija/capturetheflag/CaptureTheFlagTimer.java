@@ -55,11 +55,11 @@ public class CaptureTheFlagTimer extends TimerTask {
         		return;
         	}
 
-        	String playerName = player.getDisplayName();
+        	String playerName = player.getDisplayName().toLowerCase();
         	
         	// Check if this player has the flag
         	String name = checkItem(player, _materialId);
-        	if (name.equals("blue") || name.equals("yellow"))
+        	if (name.equalsIgnoreCase("blue") || name.equalsIgnoreCase("yellow"))
         	{
         		
         		// If the player just took the flag...
@@ -105,13 +105,12 @@ public class CaptureTheFlagTimer extends TimerTask {
         		if (_whoHaveFlags.contains(playerName)) {
         			double X = player.getLocation().getX();
         			double Z = player.getLocation().getZ();
-        			Bukkit.broadcastMessage(ChatColor.BLUE + "[CTF] Player " + ChatColor.RED + playerName 
-        								  + ChatColor.BLUE + " dropped the flag at ["
-        								  + (int)X + "," + (int)Z + "]");
         			_whoHaveFlags.remove(playerName);
+        			
+        			Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName 
+							                + ChatColor.WHITE + " dropped the flag at [" + (int)X + "," + (int)Z + "]");
         		}
         	}
-        	
         }
     }
     
@@ -132,7 +131,6 @@ public class CaptureTheFlagTimer extends TimerTask {
     			}
     		}
     	}
-    	_log.info("name = " + str);
     	return str;
     }
     
