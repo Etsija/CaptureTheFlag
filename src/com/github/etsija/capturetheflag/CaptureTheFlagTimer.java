@@ -92,7 +92,7 @@ public class CaptureTheFlagTimer extends TimerTask {
         		} else if (_plugin.effectInUse.equals("flames")) {
         			player.getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 1);
         		} else if (_plugin.effectInUse.equals("fireworks")) {
-        			firework(player);
+        			//firework(player);
         		} else if (_plugin.effectInUse.equals("endereye")) {
         			player.getWorld().playEffect(player.getLocation(), Effect.ENDER_SIGNAL, 1);
         		} else if (_plugin.effectInUse.equals("smoke")) {

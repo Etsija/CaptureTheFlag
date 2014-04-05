@@ -20,7 +20,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class CaptureTheFlag extends JavaPlugin {
@@ -33,7 +32,7 @@ public class CaptureTheFlag extends JavaPlugin {
 	private Integer materialId;				//
 	private Timer timer = new Timer();		// Timer task
 	private boolean tracking = false;
-	String strEffects[] = {"flames", "lightning", "fireworks", "endereye", "smoke"};
+	String strEffects[] = {"flames", "lightning", "endereye", "smoke"};
 	List<String> effects = Arrays.asList(strEffects);
 	String effectInUse = effects.get(0);
 	List<String> teamBlue = new ArrayList<String>();
@@ -86,18 +85,9 @@ public class CaptureTheFlag extends JavaPlugin {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		
-		Player player = null;
-		
-		if (sender instanceof Player) {
-			player = (Player) sender;
-		} else {
-			sender.sendMessage("You must be a player to enter this command.");
-			return false;
-		}
-		
 		// Command /flag
 		if ((cmd.getName().equalsIgnoreCase("flag")) &&
-			(player.hasPermission("capturetheflag.flag")) &&
+			(sender.hasPermission("capturetheflag.flag")) &&
 			(args.length > 0)) {
 			
 			// /flag on || /flag on [interval]
@@ -110,18 +100,18 @@ public class CaptureTheFlag extends JavaPlugin {
 						checkInterval = 1;
 				} else {
 					checkInterval = 3;
-					player.sendMessage("[CTF] Flag polling interval now set to 3 seconds.");
-					player.sendMessage("[CTF] You can change it with /flag on [interval], minimum is 1s");
+					sender.sendMessage("[CTF] Flag polling interval now set to 3 seconds.");
+					sender.sendMessage("[CTF] You can change it with /flag on [interval], minimum is 1s");
 				}
 				if (!tracking) {
 					this.timer = new Timer();
 					this.timer.scheduleAtFixedRate(new CaptureTheFlagTimer(this,_log, world, materialId),
 												   checkInterval*1000,
                                                    checkInterval*1000);
-					player.sendMessage("[CTF] Flag following started.");
+					sender.sendMessage("[CTF] Flag following started.");
 					tracking = true;
 				} else {
-					player.sendMessage("[CTF] Already following the flag.");
+					sender.sendMessage("[CTF] Already following the flag.");
 				}
 				return true;
 			
@@ -129,51 +119,45 @@ public class CaptureTheFlag extends JavaPlugin {
 			} else if (args[0].equalsIgnoreCase("off")) {
 				if (tracking) {
 					this.timer.cancel();
-					player.sendMessage("[CTF] Flag following stopped.");
+					sender.sendMessage("[CTF] Flag following stopped.");
 					tracking = false;
 				} else {
-					player.sendMessage("[CTF] Was not following the flag.");
+					sender.sendMessage("[CTF] Was not following the flag.");
 				}
 				return true;
 			
 			// /flag effect || /flag effect [new effect]
 			} else if (args[0].equalsIgnoreCase("effect")) {
 				if (args.length == 1) {
-					player.sendMessage("[CTF] Current effect in use: " + effectInUse);
-					player.sendMessage("[CTF] Possible effects: " + effects);
-					player.sendMessage("[CTF] You can change the effect with /team effect [new effect]");
+					sender.sendMessage("[CTF] Current effect in use: " + effectInUse);
+					sender.sendMessage("[CTF] Possible effects: " + effects);
+					sender.sendMessage("[CTF] You can change the effect with /team effect [new effect]");
 				} else if (effects.contains(args[1])) {
 					effectInUse = args[1];
-					player.sendMessage("[CTF] You changed the effect to: " + effectInUse);
+					sender.sendMessage("[CTF] You changed the effect to: " + effectInUse);
 				}
 				return true;
 			}
 		
 		// Command /team
 		} else if ((cmd.getName().equalsIgnoreCase("team")) &&
-				(player.hasPermission("capturetheflag.team")) &&
+				(sender.hasPermission("capturetheflag.team")) &&
 				(args.length > 0)) {
 			
 			// /team add || /team add [player] [team]
 			if (args[0].equalsIgnoreCase("add")) {
 				if (args.length < 3) {
-					player.sendMessage("[CTF] Usage: /team add [player] [blue/yellow]");
+					sender.sendMessage("[CTF] Usage: /team add [player] [blue/yellow]");
 				} else {
-					// Check that the target player is online
-					//Player target = (Bukkit.getServer().getPlayer(args[1]));
-			        //if (target == null) {
-			        //   player.sendMessage("[CTF] " + args[1] + " is not online!");
-			        //   return true;
-			        //}
 			        // Check that the team is either blue or yellow
 					String playerName = args[1].toLowerCase();
 			        if (!(args[2].equalsIgnoreCase("blue") || args[2].equalsIgnoreCase("yellow"))) {
-			        	player.sendMessage("[CTF] Only blue and yellow teams allowed.");
+			        	sender.sendMessage("[CTF] Only blue and yellow teams allowed.");
 			        	return true;
 			        }
 			        // Check that the player is not already on this or another team
 			        if (teamBlue.contains(playerName) || teamYellow.contains(playerName)) {
-			        	player.sendMessage("[CTF] " + ChatColor.RED + playerName
+			        	sender.sendMessage("[CTF] " + ChatColor.RED + playerName
 			        					   + ChatColor.WHITE + " already in a team. Use /team remove/change.");
 			        	return true;
 			        }
@@ -195,7 +179,7 @@ public class CaptureTheFlag extends JavaPlugin {
 			// /team remove || /team remove [player]
 			} else if (args[0].equalsIgnoreCase("remove")) {
 				if (args.length < 2) {
-					player.sendMessage("[CTF] Usage: /team remove [player]");
+					sender.sendMessage("[CTF] Usage: /team remove [player]");
 				} else {
 					String playerName = args[1].toLowerCase();
 					if (teamBlue.contains(playerName)) {
@@ -209,7 +193,7 @@ public class CaptureTheFlag extends JavaPlugin {
 				                                + ChatColor.WHITE   + " removed from the"
 				                                + ChatColor.YELLOW  + " yellow team!");
 					} else {
-						player.sendMessage("[CTF] " + playerName + " doesn't seem to belong to either team.");
+						sender.sendMessage("[CTF] " + playerName + " doesn't seem to belong to either team.");
 					}
 				}
 				return true;
@@ -217,7 +201,7 @@ public class CaptureTheFlag extends JavaPlugin {
 			// /team change || /team change [player]
 			} else if (args[0].equalsIgnoreCase("change")) {
 				if (args.length < 2) {
-					player.sendMessage("[CTF] Usage: /team change [player]");
+					sender.sendMessage("[CTF] Usage: /team change [player]");
 				} else {
 					String playerName = args[1].toLowerCase();
 					if (teamBlue.contains(playerName)) {
@@ -237,7 +221,7 @@ public class CaptureTheFlag extends JavaPlugin {
 												+ ChatColor.WHITE  + " to the"
 												+ ChatColor.BLUE   + " blue team!");
 					} else {
-						player.sendMessage("[CTF] " + playerName + " doesn't seem to belong to either team.");
+						sender.sendMessage("[CTF] " + playerName + " doesn't seem to belong to either team.");
 					}
 				}
 				return true;
@@ -245,12 +229,12 @@ public class CaptureTheFlag extends JavaPlugin {
 			// /team list || /team list [blue/yellow]
 			} else if (args[0].equalsIgnoreCase("list")) {
 				if (args.length < 2) {
-					player.sendMessage("[CTF] " + ChatColor.BLUE + "Blue team: " + teamBlue);
-					player.sendMessage("[CTF] " + ChatColor.YELLOW + "Yellow team: " + teamYellow);
+					sender.sendMessage("[CTF] " + ChatColor.BLUE + "Blue team: " + teamBlue);
+					sender.sendMessage("[CTF] " + ChatColor.YELLOW + "Yellow team: " + teamYellow);
 				} else if (args[1].equalsIgnoreCase("blue")) {
-					player.sendMessage("[CTF] " + ChatColor.BLUE + "Blue team: " + teamBlue);
+					sender.sendMessage("[CTF] " + ChatColor.BLUE + "Blue team: " + teamBlue);
 				} else if (args[1].equalsIgnoreCase("yellow")) {
-					player.sendMessage("[CTF] " + ChatColor.YELLOW + "Yellow team: " + teamYellow);
+					sender.sendMessage("[CTF] " + ChatColor.YELLOW + "Yellow team: " + teamYellow);
 				}
 				return true;
 			}
