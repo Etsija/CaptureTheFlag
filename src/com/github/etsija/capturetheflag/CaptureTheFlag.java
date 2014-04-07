@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
@@ -21,6 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 public class CaptureTheFlag extends JavaPlugin {
 
@@ -30,7 +30,7 @@ public class CaptureTheFlag extends JavaPlugin {
 	private String world;					// 
 	private Integer checkInterval = 3;		// plugin config parameters
 	private Integer materialId;				//
-	private Timer timer = new Timer();		// Timer task
+	private BukkitTask timerTask;			// Timer task
 	private boolean tracking = false;
 	String strEffects[] = {"flames", "lightning", "endereye", "smoke"};
 	List<String> effects = Arrays.asList(strEffects);
@@ -77,7 +77,7 @@ public class CaptureTheFlag extends JavaPlugin {
 		saveYaml(configFile, config);
 		
 		// Cancel all CaptureTheFlagTimer tasks
-		this.timer.cancel();
+		//this.timer.cancel();
 		
 		_log.info("[CaptureTheFlag] disabled!");
 	}
@@ -104,10 +104,12 @@ public class CaptureTheFlag extends JavaPlugin {
 					sender.sendMessage("[CTF] You can change it with /flag on [interval], minimum is 1s");
 				}
 				if (!tracking) {
-					this.timer = new Timer();
-					this.timer.scheduleAtFixedRate(new CaptureTheFlagTimer(this,_log, world, materialId),
-												   checkInterval*1000,
-                                                   checkInterval*1000);
+					//this.timer = new Timer();
+					//this.timer.scheduleAtFixedRate(new CaptureTheFlagTimer(this,_log, world, materialId),
+					//							   checkInterval*1000,
+                    //                               checkInterval*1000);
+					timerTask = new CaptureTheFlagTimer(this, _log, world, materialId)
+													   .runTaskTimer(this, 0, checkInterval*20);
 					sender.sendMessage("[CTF] Flag following started.");
 					tracking = true;
 				} else {
@@ -118,7 +120,7 @@ public class CaptureTheFlag extends JavaPlugin {
 			// /flag off
 			} else if (args[0].equalsIgnoreCase("off")) {
 				if (tracking) {
-					this.timer.cancel();
+					timerTask.cancel();
 					sender.sendMessage("[CTF] Flag following stopped.");
 					tracking = false;
 				} else {

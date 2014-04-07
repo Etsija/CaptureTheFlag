@@ -2,7 +2,6 @@ package com.github.etsija.capturetheflag;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -15,8 +14,9 @@ import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
-public class CaptureTheFlagTimer extends TimerTask {
+public class CaptureTheFlagTimer extends BukkitRunnable {
 
 	Logger _log;
 	private CaptureTheFlag _plugin;
@@ -37,7 +37,7 @@ public class CaptureTheFlagTimer extends TimerTask {
 			
 	// Handle all online players when the task runs as scheduled
 	@Override
-	public synchronized void run() {
+	public void run() {
 		for (Player player : this._plugin.getServer().getOnlinePlayers()) {
 			this._handlePlayer(player);
 		}
@@ -46,70 +46,65 @@ public class CaptureTheFlagTimer extends TimerTask {
 	// This method checks one player at a time for the flag capture
     private void _handlePlayer(Player player) {
     	
-    	// So someone doesn't mess with the Player while we're busy...
-        synchronized(player) {
+        // If this player is not in the world to be checked -> return immediately
+        String playerWorld = player.getWorld().getName();
+        if (!playerWorld.equals(_world)) {
+        	return;
+        }
+
+        String playerName = player.getDisplayName().toLowerCase();
         	
-        	// If this player is not in the world to be checked -> return immediately
-        	String playerWorld = player.getWorld().getName();
-        	if (!playerWorld.equals(_world)) {
-        		return;
+        // Check if this player has the flag
+        String name = checkItem(player, _materialId);
+        if (name.equalsIgnoreCase("blue") || name.equalsIgnoreCase("yellow"))
+        {
+        	// If the player just took the flag...
+        	if (!_whoHaveFlags.contains(playerName)) {
+        		_whoHaveFlags.add(playerName);
+        			
+       			// Blue team got back its own plugin
+       			if (name.equals("blue") && _plugin.teamBlue.contains(playerName)) {
+       				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
+        					                + ChatColor.WHITE + " is now carrying the"
+        					                + ChatColor.BLUE  + " blue team's"
+        					                + ChatColor.WHITE + " own flag");
+        		} else if (name.equals("yellow") && _plugin.teamYellow.contains(playerName)) {
+        			Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
+			                                + ChatColor.WHITE   + " is now carrying the"
+			                                + ChatColor.YELLOW  + " yellow team's"
+			                                + ChatColor.WHITE   + " own flag");
+        		} else if (name.equals("blue") && _plugin.teamYellow.contains(playerName)) {
+        			Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
+                                            + ChatColor.WHITE + " has now captured"
+                                            + ChatColor.BLUE  + " blue team's flag!");
+        		} else if (name.equals("yellow") && _plugin.teamBlue.contains(playerName)) {
+        			Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
+                              				+ ChatColor.WHITE  + " has now captured"
+                               				+ ChatColor.YELLOW + " yellow team's flag!");
+        		}
+        	}
+        	// Play the chosen effect
+        	if (_plugin.effectInUse.equals("lightning")) {
+        		player.getWorld().strikeLightningEffect(player.getLocation());
+        	} else if (_plugin.effectInUse.equals("flames")) {
+        		player.getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 1);
+        	} else if (_plugin.effectInUse.equals("fireworks")) {
+        		//firework(player);
+        	} else if (_plugin.effectInUse.equals("endereye")) {
+        		player.getWorld().playEffect(player.getLocation(), Effect.ENDER_SIGNAL, 1);
+        	} else if (_plugin.effectInUse.equals("smoke")) {
+        		player.getWorld().playEffect(player.getLocation(), Effect.SMOKE, 1);
         	}
 
-        	String playerName = player.getDisplayName().toLowerCase();
-        	
-        	// Check if this player has the flag
-        	String name = checkItem(player, _materialId);
-        	if (name.equalsIgnoreCase("blue") || name.equalsIgnoreCase("yellow"))
-        	{
+        } else {
         		
-        		// If the player just took the flag...
-        		if (!_whoHaveFlags.contains(playerName)) {
-        			_whoHaveFlags.add(playerName);
-        			
-        			// Blue team got back its own plugin
-        			if (name.equals("blue") && _plugin.teamBlue.contains(playerName)) {
-        				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
-        						                + ChatColor.WHITE + " is now carrying the"
-        						                + ChatColor.BLUE  + " blue team's"
-        						                + ChatColor.WHITE + " own flag");
-        			} else if (name.equals("yellow") && _plugin.teamYellow.contains(playerName)) {
-        				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
-				                                + ChatColor.WHITE   + " is now carrying the"
-				                                + ChatColor.YELLOW  + " yellow team's"
-				                                + ChatColor.WHITE   + " own flag");
-        			} else if (name.equals("blue") && _plugin.teamYellow.contains(playerName)) {
-        				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
-                                                + ChatColor.WHITE + " has now captured"
-                                                + ChatColor.BLUE  + " blue team's flag!");
-        			} else if (name.equals("yellow") && _plugin.teamBlue.contains(playerName)) {
-        				Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName
-                                				+ ChatColor.WHITE  + " has now captured"
-                                				+ ChatColor.YELLOW + " yellow team's flag!");
-        			}
-        		}
-        		if (_plugin.effectInUse.equals("lightning")) {
-        			player.getWorld().strikeLightningEffect(player.getLocation());
-        		} else if (_plugin.effectInUse.equals("flames")) {
-        			player.getWorld().playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 1);
-        		} else if (_plugin.effectInUse.equals("fireworks")) {
-        			//firework(player);
-        		} else if (_plugin.effectInUse.equals("endereye")) {
-        			player.getWorld().playEffect(player.getLocation(), Effect.ENDER_SIGNAL, 1);
-        		} else if (_plugin.effectInUse.equals("smoke")) {
-        			player.getWorld().playEffect(player.getLocation(), Effect.SMOKE, 1);
-        		}
-
-        	} else {
-        		
-        		// If the player dropped the flag
-        		if (_whoHaveFlags.contains(playerName)) {
-        			double X = player.getLocation().getX();
-        			double Z = player.getLocation().getZ();
-        			_whoHaveFlags.remove(playerName);
-        			
-        			Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName 
-							                + ChatColor.WHITE + " dropped the flag at [" + (int)X + "," + (int)Z + "]");
-        		}
+        	// If the player dropped the flag
+        	if (_whoHaveFlags.contains(playerName)) {
+        		double X = player.getLocation().getX();
+        		double Z = player.getLocation().getZ();
+        		_whoHaveFlags.remove(playerName);	
+        		Bukkit.broadcastMessage("[CTF] " + ChatColor.RED + playerName 
+						                + ChatColor.WHITE + " dropped the flag at [" + (int)X + "," + (int)Z + "]");
         	}
         }
     }
