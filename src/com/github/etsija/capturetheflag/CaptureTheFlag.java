@@ -19,12 +19,15 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 public class CaptureTheFlag extends JavaPlugin {
 
 	private Logger _log = Logger.getLogger("Minecraft"); // Write debug info to console
+	private PluginManager pm;
+	private final CaptureTheFlagEvents ctfEvents = new CaptureTheFlagEvents();
 	File configFile;						// config.yml
 	FileConfiguration config;				// configuration object for config.yml
 	private String world;					// 
@@ -68,7 +71,11 @@ public class CaptureTheFlag extends JavaPlugin {
 		// Finally, import all needed config params from the corresponding config files
 		world = config.getString("world");
 		materialId = config.getInt("materialId");
-				
+		
+		// Register the event listeners
+		pm = this.getServer().getPluginManager();
+		pm.registerEvents(ctfEvents, this);
+		
 		_log.info("[CaptureTheFlag] enabled!");
 	}
 	
